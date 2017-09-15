@@ -1,0 +1,48 @@
+[
+  {
+    "name": "Phylogenetic signal",
+    "description": "Measure the phylogenetic signal of a character trait.",
+    "mode": "docker",
+    "container_args": [
+      "phylogenetic_signal",
+      "$input{tree}",
+      "$input{table}",
+      "$input{column}",
+      "$output{output}"
+    ],
+    "inputs": [
+      {
+        "description": "",
+        "id": "tree",
+        "name": "Tree",
+        "required": true,
+        "target": "filepath",
+        "type": "file"
+      },
+      {
+        "description": "",
+        "id": "table",
+        "name": "Character matrix",
+        "required": true,
+        "target": "filepath",
+        "type": "file"
+      },
+      {
+        "description": "",
+        "id": "column",
+        "name": "The trait to analyze",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "description": "",
+        "id": "output",
+        "name": "The phylogenetic signal measurements",
+        "target": "filepath",
+        "type": "new-file"
+      }
+    ]
+  }
+]
