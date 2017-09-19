@@ -1,17 +1,11 @@
 <template>
   <div class="app-viewport">
     <md-toolbar class="main-toolbar">
-      <h2 class="md-title" style="flex: 1">Phylogenetic Signal</h2>
+      <h2 class="md-title" style="flex: 1">Arbor</h2>
     </md-toolbar>
     <main class="main-content">
       <girder-file-dialog label="Phylogenetic Tree (.phy)" @change="setTree"></girder-file-dialog>
       <girder-file-dialog label="Character Matrix (.csv)" @change="setTable"></girder-file-dialog>
-      <md-input-container>
-        <label for="column">Column</label>
-        <md-select name="column" id="column" :value="column" @change="updateColumn">
-          <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
-        </md-select>
-      </md-input-container>
 
       <md-tabs @change="updateActiveTab">
         <md-tab md-label="Phylogenetic tree" :md-active="activeTab === 'tree'">
@@ -25,15 +19,38 @@
           <div v-if="tableProcessing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
-          <data-table v-else :data="tableData" :columns="tableColumns">
+          <data-table v-else :data="tableData" :columns="tableColumns"></data-table>
         </md-tab>
 
-        <md-tab md-label="Result" :md-active="activeTab === 'result'">
-          <div v-if="taskProcessing" class="centered">
+        <md-tab md-label="Phylogenetic signal" :md-active="activeTab === 'phylogenetic-signal'">
+          <md-input-container>
+            <label for="column">Column</label>
+            <md-select name="column" id="column" :value="phylogeneticSignal.column" @change="updatePhylogeneticSignalColumn">
+              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
+            </md-select>
+          </md-input-container>
+          <div v-if="phylogeneticSignal.processing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
-          <data-table v-else :data="resultData" :columns="resultColumns">
+          <data-table v-else :data="phylogeneticSignal.resultData" :columns="phylogeneticSignal.resultColumns"></data-table>
         </md-tab>
+
+        <md-tab md-label="Ancestral state reconstruction" :md-active="activeTab === 'ancestral-state'">
+          <md-input-container>
+            <label for="column">Column</label>
+            <md-select name="column" id="column" :value="ancestralState.column" @change="updateAncestralStateColumn">
+              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
+            </md-select>
+          </md-input-container>
+          <div v-if="ancestralState.processing" class="centered">
+            <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
+          </div>
+          <div v-else>
+            <md-image :md-src="ancestralState.plotImage"></md-image>
+            <data-table :data="ancestralState.resultData" :columns="ancestralState.resultColumns"></data-table>
+          </div>
+        </md-tab>
+
       </md-tabs>
 
     </main>
@@ -59,21 +76,20 @@ export default {
     'tableProcessing',
     'tableColumns',
     'tableData',
-    'column',
-    'taskProcessing',
-    'resultColumns',
-    'resultData',
     'treeProcessing',
     'treeData',
+    'phylogeneticSignal',
+    'ancestralState',
   ]),
   methods: {
     ...mapActions([
       'setTable',
       'setTree',
-      'updateColumn',
+      'updatePhylogeneticSignalColumn',
+      'updateAncestralStateColumn',
     ]),
     updateActiveTab(tabIndex) {
-      const tabName = ['tree', 'table', 'result'];
+      const tabName = ['tree', 'table', 'phylogenetic-signal', 'ancestral-state'];
       this.$store.commit('UPDATE_ACTIVE_TAB', { tab: tabName[tabIndex] });
     },
   },

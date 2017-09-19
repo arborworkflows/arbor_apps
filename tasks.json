@@ -44,5 +44,59 @@
         "type": "new-file"
       }
     ]
+  },
+  {
+    "name": "Ancestral state reconstruction",
+    "description": "Measure the ancestral state of a character trait.",
+    "mode": "docker",
+    "container_args": [
+      "ancestral_state",
+      "$input{tree}",
+      "$input{table}",
+      "$input{column}",
+      "$output{output}",
+      "$output{plot}"
+    ],
+    "inputs": [
+      {
+        "description": "",
+        "id": "tree",
+        "name": "Tree",
+        "required": true,
+        "target": "filepath",
+        "type": "file"
+      },
+      {
+        "description": "",
+        "id": "table",
+        "name": "Character matrix",
+        "required": true,
+        "target": "filepath",
+        "type": "file"
+      },
+      {
+        "description": "",
+        "id": "column",
+        "name": "The trait to analyze",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "description": "",
+        "id": "output",
+        "name": "The ancestral state measurements",
+        "target": "filepath",
+        "type": "new-file"
+      },
+      {
+        "description": "",
+        "id": "plot",
+        "name": "The ancestral state tree diagram",
+        "target": "filepath",
+        "type": "new-file"
+      }
+    ]
   }
 ]

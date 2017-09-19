@@ -69,18 +69,14 @@ function getResultsFolder() {
   );
 }
 
-function getItemTask() {
-  return Vue.http.get('resource/search', { params: { q: 'Phylogenetic signal', mode: 'prefix', types: '["item"]' } });
-}
+function runPhylogeneticSignal(state, commit) {
+  const getItemTask = () =>
+    Vue.http.get('resource/search', { params: { q: 'Phylogenetic signal', mode: 'prefix', types: '["item"]' } });
 
-function maybeRun(state, commit) {
-  if (!state.table.id || !state.tree.id || !state.column) {
-    return;
-  }
+  commit('PHYLOGENETIC_SIGNAL_REQUEST');
+
   Promise.all([getResultsFolder(), getItemTask()]).then(
     ([{ body: folder }, { body: { item: [itemTask] } }]) => {
-      commit('TASK_REQUEST');
-      commit('UPDATE_ACTIVE_TAB', { tab: 'result' });
       const inputs = encodeURIComponent(JSON.stringify({
         tree: {
           mode: 'girder',
@@ -96,7 +92,7 @@ function maybeRun(state, commit) {
         },
         column: {
           mode: 'inline',
-          data: state.column,
+          data: state.phylogeneticSignal.column,
         },
       }));
 
@@ -127,11 +123,89 @@ function maybeRun(state, commit) {
               setTimeout(waitForJob, 1000);
             } else {
               console.log(`done (${status.name})`);
+              console.log(currentJob);
               const itemId = currentJob.body.itemTaskBindings.outputs.output.itemId;
               Vue.http.get(`item/${itemId}/files`).then((resp) => {
                 Vue.http.get(`file/${resp.body[0]._id}/download`).then((content) => {
                   const data = csvParse(content.bodyText);
-                  commit('RESULT_DATA', data);
+                  commit('PHYLOGENETIC_SIGNAL_RESULT', data);
+                });
+              });
+            }
+          });
+        }
+        waitForJob();
+      });
+    },
+  );
+}
+
+function runAncestralState(state, commit) {
+  const getItemTask = () =>
+    Vue.http.get('resource/search', { params: { q: 'Ancestral state reconstruction', mode: 'prefix', types: '["item"]' } });
+
+  commit('ANCESTRAL_STATE_REQUEST');
+
+  Promise.all([getResultsFolder(), getItemTask()]).then(
+    ([{ body: folder }, { body: { item: [itemTask] } }]) => {
+      const inputs = encodeURIComponent(JSON.stringify({
+        tree: {
+          mode: 'girder',
+          resource_type: 'item',
+          id: state.tree.id,
+          fileName: state.tree.name,
+        },
+        table: {
+          mode: 'girder',
+          resource_type: 'item',
+          id: state.table.id,
+          fileName: state.table.name,
+        },
+        column: {
+          mode: 'inline',
+          data: state.ancestralState.column,
+        },
+      }));
+
+      const outputs = encodeURIComponent(JSON.stringify({
+        output: {
+          mode: 'girder',
+          parent_id: folder._id,
+          parent_type: 'folder',
+          name: 'signal.csv',
+        },
+        plot: {
+          mode: 'girder',
+          parent_id: folder._id,
+          parent_type: 'folder',
+          name: 'plot.png',
+        },
+      }));
+      const body = `inputs=${inputs}&outputs=${outputs}`;
+      Vue.http.post(`item_task/${itemTask._id}/execution`, body, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }).then((job) => {
+        const jobStatus = {
+          0: { name: 'INACTIVE', done: true },
+          1: { name: 'QUEUED', done: false },
+          2: { name: 'RUNNING', done: false },
+          3: { name: 'SUCCESS', done: true },
+          4: { name: 'ERROR', done: true },
+          5: { name: 'CANCELED', done: true },
+        };
+        function waitForJob() {
+          Vue.http.get(`job/${job.body._id}`).then((currentJob) => {
+            const status = jobStatus[currentJob.body.status]
+              || { name: `Status code ${currentJob.body.status}`, done: false };
+            if (!status.done) {
+              console.log(`waiting (${status.name})`);
+              setTimeout(waitForJob, 1000);
+            } else {
+              console.log(`done (${status.name})`);
+              const { body: { itemTaskBindings: { outputs: {
+                output: { itemId: outputItemId }, plot: { itemId: plotItemId } } } } } = currentJob;
+              Promise.all([Vue.http.get(`item/${outputItemId}/files`), Vue.http.get(`item/${plotItemId}/files`)]).then(([outputFiles, plotFiles]) => {
+                Vue.http.get(`file/${outputFiles.body[0]._id}/download`).then((content) => {
+                  const data = csvParse(content.bodyText);
+                  commit('ANCESTRAL_STATE_RESULT', { data, plotImage: `/api/v1/file/${plotFiles.body[0]._id}/download` });
                 });
               });
             }
@@ -156,12 +230,21 @@ const store = new Vuex.Store({
     tableProcessing: false,
     tableColumns: [],
     tableData: [],
-    column: null,
+    phylogeneticSignal: {
+      column: null,
+      processing: false,
+      resultData: [],
+      resultColumns: [],
+    },
+    ancestralState: {
+      column: null,
+      processing: false,
+      resultData: [],
+      resultColumns: [],
+      plotImage: null,
+    },
     treeProcessing: false,
     treeData: {},
-    taskProcessing: false,
-    resultData: [],
-    resultColumns: [],
     activeTab: 'tree',
   },
 
@@ -192,26 +275,41 @@ const store = new Vuex.Store({
       state.treeProcessing = false;
     },
 
-    TASK_REQUEST(state) {
-      state.taskProcessing = true;
-    },
-
-    RESULT_DATA(state, data) {
-      state.resultColumns = data.columns;
-      state.resultData = data;
-      state.taskProcessing = false;
-    },
-
     SET_TREE(state, tree) {
       state.tree = tree;
     },
 
-    UPDATE_COLUMN(state, column) {
-      state.column = column;
-    },
-
     UPDATE_ACTIVE_TAB(state, { tab }) {
       state.activeTab = tab;
+    },
+
+    PHYLOGENETIC_SIGNAL_REQUEST(state) {
+      state.phylogeneticSignal.processing = true;
+    },
+
+    PHYLOGENETIC_SIGNAL_RESULT(state, data) {
+      state.phylogeneticSignal.resultColumns = data.columns;
+      state.phylogeneticSignal.resultData = data;
+      state.phylogeneticSignal.processing = false;
+    },
+
+    UPDATE_PHYLOGENETIC_SIGNAL_COLUMN(state, column) {
+      state.phylogeneticSignal.column = column;
+    },
+
+    ANCESTRAL_STATE_REQUEST(state) {
+      state.ancestralState.processing = true;
+    },
+
+    ANCESTRAL_STATE_RESULT(state, { data, plotImage }) {
+      state.ancestralState.resultColumns = data.columns;
+      state.ancestralState.resultData = data;
+      state.ancestralState.plotImage = plotImage;
+      state.ancestralState.processing = false;
+    },
+
+    UPDATE_ANCESTRAL_STATE_COLUMN(state, column) {
+      state.ancestralState.column = column;
     },
   },
 
@@ -224,7 +322,6 @@ const store = new Vuex.Store({
         Vue.http.get(`file/${resp.body[0]._id}/download`).then((content) => {
           const data = csvParse(content.bodyText);
           commit('TABLE_DATA', data);
-          maybeRun(state, commit);
         });
       });
     },
@@ -237,14 +334,22 @@ const store = new Vuex.Store({
         Vue.http.get(`file/${resp.body[0]._id}/download`).then((content) => {
           const data = parseNewick(content.bodyText);
           commit('TREE_DATA', data);
-          maybeRun(state, commit);
         });
       });
     },
 
-    updateColumn({ state, commit }, column) {
-      commit('UPDATE_COLUMN', column);
-      maybeRun(state, commit);
+    updatePhylogeneticSignalColumn({ state, commit }, column) {
+      commit('UPDATE_PHYLOGENETIC_SIGNAL_COLUMN', column);
+      if (state.table.id && state.tree.id && state.phylogeneticSignal.column) {
+        runPhylogeneticSignal(state, commit);
+      }
+    },
+
+    updateAncestralStateColumn({ state, commit }, column) {
+      commit('UPDATE_ANCESTRAL_STATE_COLUMN', column);
+      if (state.table.id && state.tree.id && state.ancestralState.column) {
+        runAncestralState(state, commit);
+      }
     },
   },
 });
