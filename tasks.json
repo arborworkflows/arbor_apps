@@ -98,5 +98,75 @@
         "type": "new-file"
       }
     ]
+  },
+  {
+    "name": "PGLS",
+    "description": "Phylogenetic generalized least squares.",
+    "mode": "docker",
+    "container_args": [
+      "pgls",
+      "$input{tree}",
+      "$input{table}",
+      "$input{model}",
+      "$input{x}",
+      "$input{y}",
+      "$output{summary}",
+      "$output{plot}"
+    ],
+    "inputs": [
+      {
+        "description": "",
+        "id": "tree",
+        "name": "Tree",
+        "required": true,
+        "target": "filepath",
+        "type": "file"
+      },
+      {
+        "description": "",
+        "id": "table",
+        "name": "Character matrix",
+        "required": true,
+        "target": "filepath",
+        "type": "file"
+      },
+      {
+        "description": "Valid options are BM, OU, Pagel, and ACDC.",
+        "id": "model",
+        "name": "The residual model",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "description": "",
+        "id": "x",
+        "name": "The independent variable",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "description": "",
+        "id": "y",
+        "name": "The dependent variable",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "description": "",
+        "id": "summary",
+        "name": "Summary measurements",
+        "target": "filepath",
+        "type": "new-file"
+      },
+      {
+        "description": "",
+        "id": "plot",
+        "name": "A scatterplot of PGLS fit",
+        "target": "filepath",
+        "type": "new-file"
+      }
+    ]
   }
 ]

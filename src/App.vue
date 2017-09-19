@@ -51,6 +51,28 @@
           </div>
         </md-tab>
 
+        <md-tab md-label="PGLS" :md-active="activeTab === 'pgls'">
+          <md-input-container>
+            <label for="column">X (independent variable)</label>
+            <md-select name="column" id="column" :value="pgls.x" @change="updatePglsX">
+              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
+            </md-select>
+          </md-input-container>
+          <md-input-container>
+            <label for="column">Y (dependent variable)</label>
+            <md-select name="column" id="column" :value="pgls.y" @change="updatePglsY">
+              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
+            </md-select>
+          </md-input-container>
+          <div v-if="pgls.processing" class="centered">
+            <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
+          </div>
+          <div v-else>
+            <data-table :data="pgls.resultData" :columns="pgls.resultColumns"></data-table>
+            <md-image :md-src="pgls.plotImage"></md-image>
+          </div>
+        </md-tab>
+
       </md-tabs>
 
     </main>
@@ -80,6 +102,7 @@ export default {
     'treeData',
     'phylogeneticSignal',
     'ancestralState',
+    'pgls',
   ]),
   methods: {
     ...mapActions([
@@ -87,9 +110,11 @@ export default {
       'setTree',
       'updatePhylogeneticSignalColumn',
       'updateAncestralStateColumn',
+      'updatePglsX',
+      'updatePglsY',
     ]),
     updateActiveTab(tabIndex) {
-      const tabName = ['tree', 'table', 'phylogenetic-signal', 'ancestral-state'];
+      const tabName = ['tree', 'table', 'phylogenetic-signal', 'ancestral-state', 'pgls'];
       this.$store.commit('UPDATE_ACTIVE_TAB', { tab: tabName[tabIndex] });
     },
   },
