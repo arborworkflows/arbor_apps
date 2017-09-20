@@ -38,7 +38,7 @@ function getCookie(name) {
 Vue.http.options.root = '/api/v1';
 Vue.http.headers.common['Girder-Token'] = getCookie('girderToken');
 
-function getResultsFolder() {
+function getResultsFolder(taskName) {
   const isoString = (d) => {
     const tzo = -d.getTimezoneOffset();
     const dif = tzo >= 0 ? '+' : '-';
@@ -57,7 +57,7 @@ function getResultsFolder() {
   };
 
   const whenUser = Vue.http.get('user/me');
-  const folderName = `${isoString(new Date())} Phylogenetic signal`;
+  const folderName = `${isoString(new Date())} ${taskName}`;
   return whenUser.then(({ body: user }) =>
     Vue.http.get('resource/lookup', { params: { path: `/user/${user.login}/.results` } }),
   ).then(folder => folder, () =>
@@ -113,9 +113,11 @@ function runAnalysis({ taskName, inputSpec, outputSpec }) {
 function runPhylogeneticSignal({ state, commit }) {
   commit('PHYLOGENETIC_SIGNAL_REQUEST');
 
-  getResultsFolder().then(({ body: folder }) =>
+  const taskName = 'Phylogenetic signal';
+
+  getResultsFolder(taskName).then(({ body: folder }) =>
     runAnalysis({
-      taskName: 'Phylogenetic signal',
+      taskName,
       inputSpec: {
         tree: {
           mode: 'girder',
@@ -156,9 +158,11 @@ function runPhylogeneticSignal({ state, commit }) {
 function runAncestralState({ state, commit }) {
   commit('ANCESTRAL_STATE_REQUEST');
 
-  getResultsFolder().then(({ body: folder }) =>
+  const taskName = 'Ancestral state reconstruction';
+
+  getResultsFolder(taskName).then(({ body: folder }) =>
     runAnalysis({
-      taskName: 'Ancestral state reconstruction',
+      taskName,
       inputSpec: {
         tree: {
           mode: 'girder',
@@ -205,9 +209,11 @@ function runAncestralState({ state, commit }) {
 function runPgls({ state, commit }) {
   commit('PGLS_REQUEST');
 
-  getResultsFolder().then(({ body: folder }) =>
+  const taskName = 'PGLS';
+
+  getResultsFolder(taskName).then(({ body: folder }) =>
     runAnalysis({
-      taskName: 'PGLS',
+      taskName,
       inputSpec: {
         tree: {
           mode: 'girder',
