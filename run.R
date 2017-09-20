@@ -84,10 +84,10 @@ if (args[1] == 'pgls') {
   require(nlme)
 
   tree <- read.tree(args[2])
-  table <- read.csv(args[3], check.names = FALSE)
+  table <- read.csv(args[3], check.names = TRUE)
   correlation <- args[4]
-  ind_variable <- args[5]
-  dep_variable <- args[6]
+  ind_variable <- make.names(args[5])
+  dep_variable <- make.names(args[6])
   modelfit_summary_file <- args[7]
   plot_file <- args[8]
 
@@ -106,7 +106,7 @@ if (args[1] == 'pgls') {
     cor <- corBlomberg(1, phy = tree, fixed = FALSE)
   }
 
-  fmla <- as.formula(paste(as.character(dep_variable), "~", as.character(ind_variable), sep = ""))
+  fmla <- as.formula(paste(as.character(dep_variable), ' ~ ', as.character(ind_variable), sep = ""))
   res <- gls(model = fmla, correlation = cor, data = table, control = glsControl(opt = "optim"))
   sum_res <- summary(res)
   sum_aov <- anova(res)
