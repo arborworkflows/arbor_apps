@@ -237,7 +237,7 @@ function runPgls({ state, commit }) {
         },
         model: {
           mode: 'inline',
-          data: 'BM',
+          data: state.pgls.model,
         },
       },
       outputSpec: {
@@ -297,6 +297,7 @@ const store = new Vuex.Store({
     pgls: {
       x: null,
       y: null,
+      model: 'BM',
       processing: false,
       resultData: [],
       resultColumns: [],
@@ -386,6 +387,10 @@ const store = new Vuex.Store({
     UPDATE_PGLS_Y(state, column) {
       state.pgls.y = column;
     },
+
+    UPDATE_PGLS_MODEL(state, model) {
+      state.pgls.model = model;
+    },
   },
 
   actions: {
@@ -436,6 +441,13 @@ const store = new Vuex.Store({
 
     updatePglsY({ state, commit }, column) {
       commit('UPDATE_PGLS_Y', column);
+      if (state.table.id && state.tree.id && state.pgls.x && state.pgls.y) {
+        runPgls({ state, commit });
+      }
+    },
+
+    updatePglsModel({ state, commit }, model) {
+      commit('UPDATE_PGLS_MODEL', model);
       if (state.table.id && state.tree.id && state.pgls.x && state.pgls.y) {
         runPgls({ state, commit });
       }

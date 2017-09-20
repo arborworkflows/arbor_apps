@@ -53,17 +53,23 @@
 
         <md-tab md-label="PGLS" :md-active="activeTab === 'pgls'">
           <md-input-container>
-            <label for="column">X (independent variable)</label>
-            <md-select name="column" id="column" :value="pgls.x" @change="updatePglsX">
+            <label for="pgls-x">X (independent variable)</label>
+            <md-select id="pgls-x" :value="pgls.x" @change="updatePglsX">
               <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
             </md-select>
           </md-input-container>
           <md-input-container>
-            <label for="column">Y (dependent variable)</label>
-            <md-select name="column" id="column" :value="pgls.y" @change="updatePglsY">
+            <label for="pgls-y">Y (dependent variable)</label>
+            <md-select id="pgls-y" :value="pgls.y" @change="updatePglsY">
               <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
             </md-select>
           </md-input-container>
+          <div>
+            <label for="pgls-model">Model for residuals</label>
+            <md-button-toggle id="pgls-model" md-single>
+              <md-button v-for="pglsModel in pglsModels" :class="{ 'md-toggle': pgls.model === pglsModel }" @click="updatePglsModel(pglsModel)">{{ pglsModel }}</md-button>
+            </md-button-toggle>
+          </div>
           <div v-if="pgls.processing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
@@ -92,6 +98,10 @@ export default {
     DataTable,
     Tree,
   },
+  data: () => ({
+    pglsModels: ['BM', 'OU', 'Pagel', 'ACDC'],
+    tabs: ['tree', 'table', 'phylogenetic-signal', 'ancestral-state', 'pgls'],
+  }),
   computed: mapState([
     'activeTab',
     'table',
@@ -112,10 +122,10 @@ export default {
       'updateAncestralStateColumn',
       'updatePglsX',
       'updatePglsY',
+      'updatePglsModel',
     ]),
     updateActiveTab(tabIndex) {
-      const tabName = ['tree', 'table', 'phylogenetic-signal', 'ancestral-state', 'pgls'];
-      this.$store.commit('UPDATE_ACTIVE_TAB', { tab: tabName[tabIndex] });
+      this.$store.commit('UPDATE_ACTIVE_TAB', { tab: this.tabs[tabIndex] });
     },
   },
 };
