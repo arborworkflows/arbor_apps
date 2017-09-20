@@ -168,5 +168,67 @@
         "type": "new-file"
       }
     ]
+  },
+  {
+    "name": "PIC",
+    "description": "Phylogenetic independent contrasts.",
+    "mode": "docker",
+    "container_args": [
+      "pic",
+      "$input{tree}",
+      "$input{table}",
+      "$input{x}",
+      "$input{y}",
+      "$output{summary}",
+      "$output{pic}"
+    ],
+    "inputs": [
+      {
+        "description": "",
+        "id": "tree",
+        "name": "Tree",
+        "required": true,
+        "target": "filepath",
+        "type": "file"
+      },
+      {
+        "description": "",
+        "id": "table",
+        "name": "Character matrix",
+        "required": true,
+        "target": "filepath",
+        "type": "file"
+      },
+      {
+        "description": "",
+        "id": "x",
+        "name": "The independent variable",
+        "required": true,
+        "type": "string"
+      },
+      {
+        "description": "",
+        "id": "y",
+        "name": "The dependent variable",
+        "required": true,
+        "type": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "description": "",
+        "id": "summary",
+        "name": "Summary measurements",
+        "target": "filepath",
+        "type": "new-file"
+      },
+      {
+        "description": "",
+        "id": "pic",
+        "name": "Contrasts file",
+        "target": "filepath",
+        "type": "new-file"
+      }
+    ]
   }
 ]

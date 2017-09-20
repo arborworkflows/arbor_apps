@@ -79,6 +79,28 @@
           </div>
         </md-tab>
 
+        <md-tab md-label="PIC" :md-active="activeTab === 'pic'">
+          <md-input-container>
+            <label for="pic-x">X (independent variable)</label>
+            <md-select id="pic-x" :value="pic.x" @change="updatePicX">
+              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
+            </md-select>
+          </md-input-container>
+          <md-input-container>
+            <label for="pic-y">Y (dependent variable)</label>
+            <md-select id="pic-y" :value="pic.y" @change="updatePicY">
+              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
+            </md-select>
+          </md-input-container>
+          <div v-if="pic.processing" class="centered">
+            <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
+          </div>
+          <div v-else>
+            <data-table :data="pic.summaryData" :columns="pic.summaryColumns"></data-table>
+            <data-table :data="pic.picData" :columns="pic.picColumns"></data-table>
+          </div>
+        </md-tab>
+
       </md-tabs>
 
     </main>
@@ -100,7 +122,7 @@ export default {
   },
   data: () => ({
     pglsModels: ['BM', 'OU', 'Pagel', 'ACDC'],
-    tabs: ['tree', 'table', 'phylogenetic-signal', 'ancestral-state', 'pgls'],
+    tabs: ['tree', 'table', 'phylogenetic-signal', 'ancestral-state', 'pgls', 'pic'],
   }),
   computed: mapState([
     'activeTab',
@@ -113,6 +135,7 @@ export default {
     'phylogeneticSignal',
     'ancestralState',
     'pgls',
+    'pic',
   ]),
   methods: {
     ...mapActions([
@@ -123,6 +146,8 @@ export default {
       'updatePglsX',
       'updatePglsY',
       'updatePglsModel',
+      'updatePicX',
+      'updatePicY',
     ]),
     updateActiveTab(tabIndex) {
       this.$store.commit('UPDATE_ACTIVE_TAB', { tab: this.tabs[tabIndex] });
@@ -159,5 +184,9 @@ body,
 .centered {
   display: flex;
   justify-content: center;
+}
+
+.md-select select {
+  display: none;
 }
 </style>

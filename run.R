@@ -135,3 +135,42 @@ if (args[1] == 'pgls') {
   dev.off()
 
 }
+
+if (args[1] == 'pic') {
+  tree <- read.tree(args[2])
+  table <- read.csv(args[3], check.names = TRUE)
+  ind_variable <- make.names(args[4])
+  dep_variable <- make.names(args[5])
+  modelfit_summary_file <- args[6]
+  pic_file <- args[7]
+
+  td <- make.treedata(tree, table)
+
+  # get x and y data with names
+  # would be better to have an aRbor function that takes td directly?
+
+  x <- select_(td, ind_variable)$dat[[1]]
+  names(x) <- td$tree$tip.label
+
+  y <- select_(td, dep_variable)$dat[[1]]
+  names(y) <- td$tree$tip.label
+
+  # calculate independent contrasts
+  picX <- pic(x, tree)
+  picY <- pic(y, tree)
+
+  # run regression forced through the origin
+  res <- lm(picY ~ picX - 1)
+  output <- anova(res)
+
+  # modelfit_summary is the model summary
+  # coerce into table
+  modelfit_summary <- cbind(c(dep_variable, "Residuals"), c(coefficients(res), NA), output[, 1:5])
+  colnames(modelfit_summary)[1] <- "Effect"
+  colnames(modelfit_summary)[2] <- "Slope"
+  write.csv(modelfit_summary, modelfit_summary_file)
+
+  # pic are the contrasts
+  pic <- cbind(picX, picY)
+  write.csv(pic, pic_file)
+}

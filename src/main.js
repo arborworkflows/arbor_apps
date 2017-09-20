@@ -265,6 +265,71 @@ function runPgls({ state, commit }) {
   });
 }
 
+function runPic({ state, commit }) {
+  commit('PIC_REQUEST');
+
+  const taskName = 'PIC';
+
+  getResultsFolder(taskName).then(({ body: folder }) =>
+    runAnalysis({
+      taskName,
+      inputSpec: {
+        tree: {
+          mode: 'girder',
+          resource_type: 'item',
+          id: state.tree.id,
+          fileName: state.tree.name,
+        },
+        table: {
+          mode: 'girder',
+          resource_type: 'item',
+          id: state.table.id,
+          fileName: state.table.name,
+        },
+        x: {
+          mode: 'inline',
+          data: state.pic.x,
+        },
+        y: {
+          mode: 'inline',
+          data: state.pic.y,
+        },
+      },
+      outputSpec: {
+        summary: {
+          mode: 'girder',
+          parent_id: folder._id,
+          parent_type: 'folder',
+          name: 'summary.csv',
+        },
+        pic: {
+          mode: 'girder',
+          parent_id: folder._id,
+          parent_type: 'folder',
+          name: 'pic.csv',
+        },
+      },
+    }),
+  )
+  .then(({ summary, pic }) =>
+    Promise.all([
+      Vue.http.get(`item/${summary.itemId}/files`),
+      Vue.http.get(`item/${pic.itemId}/files`),
+    ]),
+  )
+  .then(([summaryFiles, picFiles]) =>
+    Promise.all([
+      Vue.http.get(`file/${summaryFiles.body[0]._id}/download`),
+      Vue.http.get(`file/${picFiles.body[0]._id}/download`),
+    ]),
+  )
+  .then(([summaryContent, picContent]) => {
+    const summaryData = csvParse(summaryContent.bodyText);
+    const picData = csvParse(picContent.bodyText);
+    commit('PIC_RESULT', { summary: summaryData, pic: picData });
+  });
+}
+
 const store = new Vuex.Store({
   state: {
     tree: {
@@ -302,6 +367,14 @@ const store = new Vuex.Store({
       resultData: [],
       resultColumns: [],
       plotImage: null,
+    },
+    pic: {
+      model: 'BM',
+      processing: false,
+      summaryData: [],
+      summaryColumns: [],
+      picData: [],
+      picColumns: [],
     },
   },
 
@@ -391,6 +464,26 @@ const store = new Vuex.Store({
     UPDATE_PGLS_MODEL(state, model) {
       state.pgls.model = model;
     },
+
+    PIC_REQUEST(state) {
+      state.pic.processing = true;
+    },
+
+    PIC_RESULT(state, { summary, pic }) {
+      state.pic.summaryColumns = summary.columns;
+      state.pic.summaryData = summary;
+      state.pic.picColumns = pic.columns;
+      state.pic.picData = pic;
+      state.pic.processing = false;
+    },
+
+    UPDATE_PIC_X(state, column) {
+      state.pic.x = column;
+    },
+
+    UPDATE_PIC_Y(state, column) {
+      state.pic.y = column;
+    },
   },
 
   actions: {
@@ -450,6 +543,20 @@ const store = new Vuex.Store({
       commit('UPDATE_PGLS_MODEL', model);
       if (state.table.id && state.tree.id && state.pgls.x && state.pgls.y) {
         runPgls({ state, commit });
+      }
+    },
+
+    updatePicX({ state, commit }, column) {
+      commit('UPDATE_PIC_X', column);
+      if (state.table.id && state.tree.id && state.pic.x && state.pic.y) {
+        runPic({ state, commit });
+      }
+    },
+
+    updatePicY({ state, commit }, column) {
+      commit('UPDATE_PIC_Y', column);
+      if (state.table.id && state.tree.id && state.pic.x && state.pic.y) {
+        runPic({ state, commit });
       }
     },
   },
