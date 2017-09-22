@@ -8,11 +8,12 @@
       <girder-file-dialog label="Character Matrix (.csv)" @change="setTable"></girder-file-dialog>
 
       <md-tabs @change="updateActiveTab">
+
         <md-tab md-label="Phylogenetic tree" :md-active="activeTab === 'tree'">
           <div v-if="treeProcessing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
-          <tree v-else :data="treeData"></tree>
+          <phylo-tree v-else :tree="treeData" :width="750" :height="500"></phylo-tree>
         </md-tab>
 
         <md-tab md-label="Character matrix" :md-active="activeTab === 'table'">
@@ -35,7 +36,7 @@
           <data-table v-else :data="phylogeneticSignal.resultData" :columns="phylogeneticSignal.resultColumns"></data-table>
         </md-tab>
 
-        <md-tab md-label="Ancestral state reconstruction" :md-active="activeTab === 'ancestral-state'">
+        <md-tab md-label="Ancestral state" :md-active="activeTab === 'ancestral-state'">
           <md-input-container>
             <label for="column">Column</label>
             <md-select name="column" id="column" :value="ancestralState.column" @change="updateAncestralStateColumn">
@@ -111,14 +112,14 @@
 import { mapState, mapActions } from 'vuex';
 import GirderFileDialog from './components/GirderFileDialog';
 import DataTable from './components/DataTable';
-import Tree from './components/Tree';
+import PhyloTree from './components/PhyloTree';
 
 export default {
   name: 'app',
   components: {
     GirderFileDialog,
     DataTable,
-    Tree,
+    PhyloTree,
   },
   data: () => ({
     pglsModels: ['BM', 'OU', 'Pagel', 'ACDC'],

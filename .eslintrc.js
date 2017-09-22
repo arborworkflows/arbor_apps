@@ -35,7 +35,10 @@ module.exports = {
     }],
     // allow debugger during development
     'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
+
+    // things I don't care about
     'no-underscore-dangle': 0,
-    'no-param-reassign': ['error', { 'props': false }]
+    'no-param-reassign': ['error', { 'props': false }],
+    'max-len': 0
   }
 }
