@@ -78,6 +78,10 @@ export default {
 };
 </script>
 <style scoped>
+svg {
+  max-width: none;
+}
+
 text {
   font-style: normal;
   font-size: 10px;

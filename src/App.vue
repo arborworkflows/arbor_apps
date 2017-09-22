@@ -18,11 +18,12 @@
               <md-icon>zoom_in</md-icon>
             </md-button>
           </div>
-
-          <div v-if="treeProcessing" class="centered">
-            <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
+          <div class="scrollable">
+            <div v-if="treeProcessing" class="centered">
+              <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
+            </div>
+            <phylo-tree v-else :tree="treeData" :width="treeWidth" :height="treeHeight"></phylo-tree>
           </div>
-          <phylo-tree v-else :tree="treeData" :width="treeWidth" :height="treeHeight"></phylo-tree>
         </md-tab>
 
         <md-tab md-label="Character matrix" :md-active="activeTab === 'table'">
@@ -33,12 +34,11 @@
         </md-tab>
 
         <md-tab md-label="Phylogenetic signal" :md-active="activeTab === 'phylogenetic-signal'">
-          <md-input-container>
-            <label for="column">Column</label>
-            <md-select name="column" id="column" :value="phylogeneticSignal.column" @change="updatePhylogeneticSignalColumn">
-              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
-            </md-select>
-          </md-input-container>
+          <span class="md-caption">Column</span>
+          <div>
+            <div v-for="column in tableColumns" :class="['chip', { 'chip-active': phylogeneticSignal.column === column }]" @click="updatePhylogeneticSignalColumn(column)">{{ column }}</div>
+          </div>
+          <span class="md-subheading centered">{{ phylogeneticSignal.status }}</span>
           <div v-if="phylogeneticSignal.processing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
@@ -46,12 +46,11 @@
         </md-tab>
 
         <md-tab md-label="Ancestral state" :md-active="activeTab === 'ancestral-state'">
-          <md-input-container>
-            <label for="column">Column</label>
-            <md-select name="column" id="column" :value="ancestralState.column" @change="updateAncestralStateColumn">
-              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
-            </md-select>
-          </md-input-container>
+          <span class="md-caption">Column</span>
+          <div>
+            <div v-for="column in tableColumns" :class="['chip', { 'chip-active': ancestralState.column === column }]" @click="updateAncestralStateColumn(column)">{{ column }}</div>
+          </div>
+          <span class="md-subheading centered">{{ ancestralState.status }}</span>
           <div v-if="ancestralState.processing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
@@ -62,24 +61,21 @@
         </md-tab>
 
         <md-tab md-label="PGLS" :md-active="activeTab === 'pgls'">
-          <md-input-container>
-            <label for="pgls-x">X (independent variable)</label>
-            <md-select id="pgls-x" :value="pgls.x" @change="updatePglsX">
-              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
-            </md-select>
-          </md-input-container>
-          <md-input-container>
-            <label for="pgls-y">Y (dependent variable)</label>
-            <md-select id="pgls-y" :value="pgls.y" @change="updatePglsY">
-              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
-            </md-select>
-          </md-input-container>
+          <span class="md-caption">X (independent variable)</span>
+          <div>
+            <div v-for="column in tableColumns" :class="['chip', { 'chip-active': pgls.x === column }]" @click="updatePglsX(column)">{{ column }}</div>
+          </div>
+          <span class="md-caption">Y (dependent variable)</span>
+          <div>
+            <div v-for="column in tableColumns" :class="['chip', { 'chip-active': pgls.y === column }]" @click="updatePglsY(column)">{{ column }}</div>
+          </div>
           <div>
             <label for="pgls-model">Model for residuals</label>
             <md-button-toggle id="pgls-model" md-single>
               <md-button v-for="pglsModel in pglsModels" :class="{ 'md-toggle': pgls.model === pglsModel }" @click="updatePglsModel(pglsModel)">{{ pglsModel }}</md-button>
             </md-button-toggle>
           </div>
+          <span class="md-subheading centered">{{ pgls.status }}</span>
           <div v-if="pgls.processing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
@@ -90,18 +86,15 @@
         </md-tab>
 
         <md-tab md-label="PIC" :md-active="activeTab === 'pic'">
-          <md-input-container>
-            <label for="pic-x">X (independent variable)</label>
-            <md-select id="pic-x" :value="pic.x" @change="updatePicX">
-              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
-            </md-select>
-          </md-input-container>
-          <md-input-container>
-            <label for="pic-y">Y (dependent variable)</label>
-            <md-select id="pic-y" :value="pic.y" @change="updatePicY">
-              <md-option v-for="column in tableColumns" :key="column" :value="column">{{ column }}</md-option>
-            </md-select>
-          </md-input-container>
+          <span class="md-caption">X (independent variable)</span>
+          <div>
+            <div v-for="column in tableColumns" :class="['chip', { 'chip-active': pic.x === column }]" @click="updatePicX(column)">{{ column }}</div>
+          </div>
+          <span class="md-caption">Y (dependent variable)</span>
+          <div>
+            <div v-for="column in tableColumns" :class="['chip', { 'chip-active': pic.y === column }]" @click="updatePicY(column)">{{ column }}</div>
+          </div>
+          <span class="md-subheading centered">{{ pic.status }}</span>
           <div v-if="pic.processing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
@@ -203,5 +196,35 @@ body,
 
 .md-select select {
   display: none;
+}
+
+.chip {
+  margin-right: 8px;
+  margin-bottom: 4px;
+  height: 32px;
+  padding: 8px 12px;
+  display: inline-block;
+  border-radius: 32px;
+  transition: all .4s cubic-bezier(.25,.8,.25,1);
+  font-size: 13px;
+  line-height: 16px;
+  white-space: nowrap;
+  background-color: rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.chip:hover {
+  background-color: rgba(0, 0, 0, 0.54);
+  color: #fff;
+}
+
+.chip-active {
+  background-color: rgba(0, 0, 0, 0.54);
+  color: #fff;
+}
+
+.scrollable {
+  max-width: 100%;
+  overflow: scroll;
 }
 </style>

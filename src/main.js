@@ -69,7 +69,7 @@ function getResultsFolder(taskName) {
   );
 }
 
-function runAnalysis({ taskName, inputSpec, outputSpec }) {
+function runAnalysis({ taskName, inputSpec, outputSpec, updateStatus }) {
   return new Promise((resolve, reject) => {
     Vue.http.get('resource/search', { params: { q: taskName, mode: 'prefix', types: '["item"]' } }).then(
       (itemTask) => {
@@ -91,10 +91,10 @@ function runAnalysis({ taskName, inputSpec, outputSpec }) {
               const status = jobStatus[currentJob.body.status]
                 || { name: `Status code ${currentJob.body.status}`, done: false };
               if (!status.done) {
-                console.log(`waiting (${status.name})`);
+                updateStatus(status.name);
                 setTimeout(waitForJob, 1000);
               } else {
-                console.log(`done (${status.name})`);
+                updateStatus(status.name);
                 if (status.name === 'Success') {
                   resolve(currentJob.body.itemTaskBindings.outputs);
                 } else {
@@ -143,6 +143,9 @@ function runPhylogeneticSignal({ state, commit }) {
           parent_type: 'folder',
           name: 'signal.csv',
         },
+      },
+      updateStatus(status) {
+        commit('PHYLOGENETIC_SIGNAL_STATUS', { status });
       },
     }),
   ).then(({ output }) => {
@@ -194,6 +197,9 @@ function runAncestralState({ state, commit }) {
           parent_type: 'folder',
           name: 'plot.png',
         },
+      },
+      updateStatus(status) {
+        commit('ANCESTRAL_STATE_STATUS', { status });
       },
     }),
   ).then(({ output, plot }) => {
@@ -254,14 +260,23 @@ function runPgls({ state, commit }) {
           name: 'plot.png',
         },
       },
+      updateStatus(status) {
+        commit('PGLS_STATUS', { status });
+      },
     }),
-  ).then(({ summary, plot }) => {
-    Promise.all([Vue.http.get(`item/${summary.itemId}/files`), Vue.http.get(`item/${plot.itemId}/files`)]).then(([summaryFiles, plotFiles]) => {
-      Vue.http.get(`file/${summaryFiles.body[0]._id}/download`).then((content) => {
-        const data = csvParse(content.bodyText);
-        commit('PGLS_RESULT', { data, plotImage: `/api/v1/file/${plotFiles.body[0]._id}/download` });
-      });
-    });
+  )
+  .then(({ summary, plot }) =>
+    Promise.all([Vue.http.get(`item/${summary.itemId}/files`), Vue.http.get(`item/${plot.itemId}/files`)]),
+  )
+  .then(([summaryFiles, plotFiles]) =>
+    Promise.all([
+      Vue.http.get(`file/${summaryFiles.body[0]._id}/download`),
+      `/api/v1/file/${plotFiles.body[0]._id}/download`,
+    ]),
+  )
+  .then(([content, plotImage]) => {
+    const data = csvParse(content.bodyText);
+    commit('PGLS_RESULT', { data, plotImage });
   });
 }
 
@@ -309,6 +324,9 @@ function runPic({ state, commit }) {
           name: 'pic.csv',
         },
       },
+      updateStatus(status) {
+        commit('PIC_STATUS', { status });
+      },
     }),
   )
   .then(({ summary, pic }) =>
@@ -350,37 +368,65 @@ const store = new Vuex.Store({
     activeTab: 'tree',
     phylogeneticSignal: {
       column: null,
-      processing: false,
       resultData: [],
       resultColumns: [],
+      processing: false,
+      status: null,
     },
     ancestralState: {
       column: null,
-      processing: false,
       resultData: [],
       resultColumns: [],
       plotImage: null,
+      processing: false,
+      status: null,
     },
     pgls: {
       x: null,
       y: null,
       model: 'BM',
-      processing: false,
       resultData: [],
       resultColumns: [],
       plotImage: null,
+      processing: false,
+      status: null,
     },
     pic: {
-      model: 'BM',
-      processing: false,
+      x: null,
+      y: null,
       summaryData: [],
       summaryColumns: [],
       picData: [],
       picColumns: [],
+      processing: false,
+      status: null,
     },
   },
 
   mutations: {
+    RESET_ANALYSES(state) {
+      state.phylogeneticSignal.column = null;
+      state.phylogeneticSignal.resultData = [];
+      state.phylogeneticSignal.resultColumns = [];
+
+      state.ancestralState.column = null;
+      state.ancestralState.resultData = [];
+      state.ancestralState.resultColumns = [];
+      state.ancestralState.plotImage = null;
+
+      state.pgls.x = null;
+      state.pgls.y = null;
+      state.pgls.resultData = [];
+      state.pgls.resultColumns = [];
+
+      state.pic.x = null;
+      state.pic.y = null;
+      state.pic.summaryData = [];
+      state.pic.summaryColumns = [];
+      state.pic.picData = [];
+      state.pic.picColumns = [];
+    },
+
     SET_TABLE(state, table) {
       state.table = table;
     },
@@ -392,10 +438,11 @@ const store = new Vuex.Store({
     TABLE_DATA(state, data) {
       state.tableColumns = data.columns;
       state.tableData = data;
-      if (state.tableColumns.indexOf(state.column) < 0) {
-        state.column = '';
-      }
       state.tableProcessing = false;
+    },
+
+    SET_TREE(state, tree) {
+      state.tree = tree;
     },
 
     TREE_REQUEST(state) {
@@ -405,10 +452,6 @@ const store = new Vuex.Store({
     TREE_DATA(state, data) {
       state.treeData = data;
       state.treeProcessing = false;
-    },
-
-    SET_TREE(state, tree) {
-      state.tree = tree;
     },
 
     UPDATE_TREE_ZOOM(state, { amount }) {
@@ -434,6 +477,10 @@ const store = new Vuex.Store({
       state.phylogeneticSignal.column = column;
     },
 
+    PHYLOGENETIC_SIGNAL_STATUS(state, { status }) {
+      state.phylogeneticSignal.status = status;
+    },
+
     ANCESTRAL_STATE_REQUEST(state) {
       state.ancestralState.processing = true;
     },
@@ -447,6 +494,10 @@ const store = new Vuex.Store({
 
     UPDATE_ANCESTRAL_STATE_COLUMN(state, column) {
       state.ancestralState.column = column;
+    },
+
+    ANCESTRAL_STATE_STATUS(state, { status }) {
+      state.ancestralState.status = status;
     },
 
     PGLS_REQUEST(state) {
@@ -472,6 +523,10 @@ const store = new Vuex.Store({
       state.pgls.model = model;
     },
 
+    PGLS_STATUS(state, { status }) {
+      state.pgls.status = status;
+    },
+
     PIC_REQUEST(state) {
       state.pic.processing = true;
     },
@@ -491,11 +546,16 @@ const store = new Vuex.Store({
     UPDATE_PIC_Y(state, column) {
       state.pic.y = column;
     },
+
+    PIC_STATUS(state, { status }) {
+      state.pic.status = status;
+    },
   },
 
   actions: {
     setTable({ state, commit }, table) {
       commit('SET_TABLE', table);
+      commit('RESET_ANALYSES');
       commit('UPDATE_ACTIVE_TAB', { tab: 'table' });
       commit('TABLE_REQUEST');
       Vue.http.get(`item/${table.id}/files`).then((resp) => {
@@ -508,6 +568,7 @@ const store = new Vuex.Store({
 
     setTree({ state, commit }, tree) {
       commit('SET_TREE', tree);
+      commit('RESET_ANALYSES');
       commit('UPDATE_ACTIVE_TAB', { tab: 'tree' });
       commit('TREE_REQUEST');
       Vue.http.get(`item/${tree.id}/files`).then((resp) => {
