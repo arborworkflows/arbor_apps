@@ -10,10 +10,19 @@
       <md-tabs @change="updateActiveTab">
 
         <md-tab md-label="Phylogenetic tree" :md-active="activeTab === 'tree'">
+          <div>
+            <md-button class="md-icon-button" @click="zoom(0.8)">
+              <md-icon>zoom_out</md-icon>
+            </md-button>
+            <md-button class="md-icon-button" @click="zoom(1.25)">
+              <md-icon>zoom_in</md-icon>
+            </md-button>
+          </div>
+
           <div v-if="treeProcessing" class="centered">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
-          <phylo-tree v-else :tree="treeData" :width="750" :height="500"></phylo-tree>
+          <phylo-tree v-else :tree="treeData" :width="treeWidth" :height="treeHeight"></phylo-tree>
         </md-tab>
 
         <md-tab md-label="Character matrix" :md-active="activeTab === 'table'">
@@ -133,6 +142,8 @@ export default {
     'tableData',
     'treeProcessing',
     'treeData',
+    'treeWidth',
+    'treeHeight',
     'phylogeneticSignal',
     'ancestralState',
     'pgls',
@@ -152,6 +163,9 @@ export default {
     ]),
     updateActiveTab(tabIndex) {
       this.$store.commit('UPDATE_ACTIVE_TAB', { tab: this.tabs[tabIndex] });
+    },
+    zoom(amount) {
+      this.$store.commit('UPDATE_TREE_ZOOM', { amount });
     },
   },
 };

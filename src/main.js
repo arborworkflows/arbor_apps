@@ -345,6 +345,8 @@ const store = new Vuex.Store({
     tableData: [],
     treeProcessing: false,
     treeData: {},
+    treeWidth: 750,
+    treeHeight: 500,
     activeTab: 'tree',
     phylogeneticSignal: {
       column: null,
@@ -407,6 +409,11 @@ const store = new Vuex.Store({
 
     SET_TREE(state, tree) {
       state.tree = tree;
+    },
+
+    UPDATE_TREE_ZOOM(state, { amount }) {
+      state.treeWidth *= amount;
+      state.treeHeight *= amount;
     },
 
     UPDATE_ACTIVE_TAB(state, { tab }) {
