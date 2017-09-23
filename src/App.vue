@@ -17,7 +17,7 @@
           </md-button>
         </div>
         <div class="scrollable">
-          <div v-if="treeProcessing" class="centered">
+          <div v-if="treeProcessing">
             <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
           </div>
           <phylo-tree v-else :tree="treeData" :width="treeWidth" :height="treeHeight"></phylo-tree>
@@ -26,7 +26,7 @@
 
       <md-tab md-label="Character matrix" :md-active="activeTab === 'table'">
         <girder-file-dialog label="Character Matrix (.csv)" @change="setTable"></girder-file-dialog>
-        <div v-if="tableProcessing" class="centered">
+        <div v-if="tableProcessing">
           <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
         </div>
         <data-table v-else :data="tableData" :columns="tableColumns"></data-table>
@@ -37,8 +37,8 @@
         <div>
           <div v-for="column in tableColumns" :class="['chip', { 'chip-active': phylogeneticSignal.column === column }]" @click="updatePhylogeneticSignalColumn(column)">{{ column }}</div>
         </div>
-        <span class="md-subheading centered">{{ phylogeneticSignal.status }}</span>
-        <div v-if="phylogeneticSignal.processing" class="centered">
+        <span class="md-caption">{{ phylogeneticSignal.status }}</span>
+        <div v-if="phylogeneticSignal.processing">
           <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
         </div>
         <data-table v-else :data="phylogeneticSignal.resultData" :columns="phylogeneticSignal.resultColumns"></data-table>
@@ -49,8 +49,8 @@
         <div>
           <div v-for="column in tableColumns" :class="['chip', { 'chip-active': ancestralState.column === column }]" @click="updateAncestralStateColumn(column)">{{ column }}</div>
         </div>
-        <span class="md-subheading centered">{{ ancestralState.status }}</span>
-        <div v-if="ancestralState.processing" class="centered">
+        <span class="md-caption">{{ ancestralState.status }}</span>
+        <div v-if="ancestralState.processing">
           <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
         </div>
         <div v-else>
@@ -69,13 +69,16 @@
           <div v-for="column in tableColumns" :class="['chip', { 'chip-active': pgls.y === column }]" @click="updatePglsY(column)">{{ column }}</div>
         </div>
         <div>
-          <label for="pgls-model">Model for residuals</label>
-          <md-button-toggle id="pgls-model" md-single>
+          <span class="md-caption">Model for residuals</span>
+          <div>
+            <div v-for="pglsModel in pglsModels" :class="['chip', { 'chip-active': pgls.model === pglsModel }]" @click="updatePglsModel(pglsModel)">{{ pglsModel }}</div>
+          </div>
+          <!-- <md-button-toggle id="pgls-model" md-single>
             <md-button v-for="pglsModel in pglsModels" :class="{ 'md-toggle': pgls.model === pglsModel }" @click="updatePglsModel(pglsModel)">{{ pglsModel }}</md-button>
-          </md-button-toggle>
+          </md-button-toggle> -->
         </div>
-        <span class="md-subheading centered">{{ pgls.status }}</span>
-        <div v-if="pgls.processing" class="centered">
+        <span class="md-caption">{{ pgls.status }}</span>
+        <div v-if="pgls.processing">
           <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
         </div>
         <div v-else>
@@ -93,8 +96,8 @@
         <div>
           <div v-for="column in tableColumns" :class="['chip', { 'chip-active': pic.y === column }]" @click="updatePicY(column)">{{ column }}</div>
         </div>
-        <span class="md-subheading centered">{{ pic.status }}</span>
-        <div v-if="pic.processing" class="centered">
+        <span class="md-caption">{{ pic.status }}</span>
+        <div v-if="pic.processing">
           <md-spinner :md-size="150" md-indeterminate class="md-accent"></md-spinner>
         </div>
         <div v-else>
