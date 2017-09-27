@@ -73,9 +73,6 @@
           <div>
             <div v-for="pglsModel in pglsModels" :class="['chip', { 'chip-active': pgls.model === pglsModel }]" @click="updatePglsModel(pglsModel)">{{ pglsModel }}</div>
           </div>
-          <!-- <md-button-toggle id="pgls-model" md-single>
-            <md-button v-for="pglsModel in pglsModels" :class="{ 'md-toggle': pgls.model === pglsModel }" @click="updatePglsModel(pglsModel)">{{ pglsModel }}</md-button>
-          </md-button-toggle> -->
         </div>
         <span class="md-caption">{{ pgls.status }}</span>
         <div v-if="pgls.processing">
